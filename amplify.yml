@@ -1,0 +1,37 @@
+version: 2
+frontend:
+  phases:
+    preBuild:
+      commands:
+        - export NODE_OPTIONS='--max-old-space-size=6000'
+        # To check the heap size memory limit in MB
+        - node -e "console.log('Total available heap size (MB):', v8.getHeapStatistics().heap_size_limit / 1024 / 1024)"
+        - npm ci --cache .npm --prefer-offline
+        - |
+          params=(
+            CLERK_SECRET_KEY
+          )
+          for key in "${params[@]}"; do
+            raw=$(aws ssm get-parameter \
+                    --name "/amplify/shared/${AWS_APP_ID}/${key}" \
+                    --query "Parameter.Value" \
+                    --with-decryption \
+                    --output text)
+            # echo "${key}=${raw}" >> .env.production
+            export ${key}=${raw}
+          done
+        - echo "AWS_APP_ID=$AWS_APP_ID" >> .env.production
+        - echo $CLERK_SECRET_KEY
+        - env | grep -e NEXT_ >> .env.production
+        - echo $NEXT_PUBLIC_CLERK_SIGN_IN_URL
+    build:
+      commands:
+        - npm run build
+  artifacts:
+    baseDirectory: .next
+    files:
+      - "**/*"
+  cache:
+    paths:
+      - .next/cache/**/*
+      - .npm/**/*
