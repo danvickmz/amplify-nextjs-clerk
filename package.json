@@ -5,9 +5,7 @@
   "scripts": {
     "dev": "next dev --turbopack",
     "build": "next build",
-    "start": "chmod +x start-server.sh && ./start-server.sh",
-    "start-next-server": "next start",
-    "postbuild": "node ./copy-files.js",
+    "start": "node start.mjs",
     "lint": "next lint"
   },
   "dependencies": {
